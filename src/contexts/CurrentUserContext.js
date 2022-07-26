@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { createContext, useContext, useEffect, useMemo, useState} from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { axiosReq, axiosRes } from "../api/axiosDefault";
 import { useNavigate } from "react-router-dom";
 
@@ -14,8 +14,12 @@ export const CurrentUserProvider = ({ children }) => {
 
     const handleMount = async () => {
         try {
-            const { data } = await axios.get('dj-rest-auth/user/')
-            setCurrentUser(data);
+            let user = await axios.get('dj-rest-auth/user/')
+            if (user) {
+                const { data } = user
+                setCurrentUser(data)
+            }
+            else { setCurrentUser(null) }
         } catch (err) {
             console.log(err);
         }
@@ -29,11 +33,49 @@ export const CurrentUserProvider = ({ children }) => {
 
     const navigate = useNavigate();
 
+
+    // axiosReq.interceptors.request.use(
+    //         async (config) => {
+    //             console.log("req0")
+    //             try {
+    //                 console.log("req1")
+    //                 await axios.post("/dj-rest-auth/token/refresh/");
+    //                 console.log("req2")
+    //             } catch (err) {
+    //                 console.log("req3")
+    //                 setCurrentUser((prevCurrentUser) => {
+    //                     if (prevCurrentUser) {
+    //                         console.log("req4")
+    //                         navigate("/signin");
+    //                     }
+    //                     console.log("req5")
+    //                     return null;
+    //                 });
+    //                 return config;
+    //             }
+    //             return config;
+    //         },
+    //         (err) => {
+    //             console.log("req6")
+    //             return Promise.reject(err);
+    //         }
+    //     );
+
+    //     axios.interceptors.response.use(
+    //         (response) => response,
+    //         async (err) => {
+    //             console.log("res")}
+    //     );
+
+
+
     useMemo(() => {
         axiosReq.interceptors.request.use(
             async (config) => {
-                try {
+                console.log("req0");
+                try {console.log("req1")
                     await axios.post("/dj-rest-auth/token/refresh/");
+                    console.log("req2")
                 } catch (err) {
                     setCurrentUser((prevCurrentUser) => {
                         if (prevCurrentUser) {

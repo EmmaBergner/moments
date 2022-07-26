@@ -1,24 +1,24 @@
-import React, { useState } from "react";
-
-import Form from "react-bootstrap/Form";
-import Button from "react-bootstrap/Button";
-import Row from "react-bootstrap/Row";
-import Col from "react-bootstrap/Col";
-import Container from "react-bootstrap/Container";
+import React, { useRef, useState } from "react";
+import { Form, Button, Image, Col, Row, Container, Alert } from "react-bootstrap";
 import Upload from "../../assets/upload.png";
 import styles from "../../styles/PostCreateEditForm.module.css";
 import appStyles from "../../App.module.css";
 import btnStyles from "../../styles/Button.module.css";
 import Asset from "../../components/Asset";
-import { Image } from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 function PostCreateForm() {
 
-  // const [errors, setErrors] = useState({});
+  const [errors, setErrors] = useState({});
 
   const [postData, setPostData] = useState({ title: "", content: "", image: "" });
 
   const { title, content, image } = postData;
+
+  const imageInput = useRef(null);
+
+  const navigate = useNavigate();
 
   const handleChange = (event) => {
     setPostData({
@@ -37,6 +37,19 @@ function PostCreateForm() {
     }
   }
 
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    try {
+      const formData = new FormData();
+      formData.append("title", title);
+      formData.append("content", content);
+      formData.append("image", imageInput.current.files[0]);
+      await axios.post('/posts/', formData);
+      navigate(-1)
+    } catch (err) {
+      setErrors(err.response?.data)
+    }
+  }
 
   const textFields = (
     <div className="text-center">
@@ -45,16 +58,20 @@ function PostCreateForm() {
       <Form.Group controlId="title">
         <Form.Label>Title</Form.Label>
         <Form.Control
+          className={styles.Input}
           type="text"
           name="title"
           value={title}
           onChange={handleChange}
         />
       </Form.Group>
+      {errors.title?.map((message, idx) =>
+        <Alert variant="warning" key={idx}>{message}</Alert>)}
 
       <Form.Group controlId="content">
         <Form.Label>Content</Form.Label>
         <Form.Control
+          className={styles.Input}
           as="textarea"
           name="content"
           rows={6}
@@ -62,28 +79,26 @@ function PostCreateForm() {
           onChange={handleChange}
         />
       </Form.Group>
+      {errors.content?.map((message, idx) =>
+        <Alert variant="warning" key={idx}>{message}</Alert>)}
 
-      <Button
-        className={`${btnStyles.Button} ${btnStyles.Blue}`}
-        onClick={() => { }}
-      >
-        cancel
+      <Button className={`${btnStyles.Button} ${btnStyles.Blue}`} onClick={() => { }} >
+        Cancel
       </Button>
       <Button className={`${btnStyles.Button} ${btnStyles.Blue}`} type="submit">
-        create
+        Create
       </Button>
     </div>
   );
 
   return (
-    <Form>
+    <Form onSubmit={handleSubmit}>
       <Row>
         <Col className="py-2 p-0 p-md-2" md={7} lg={8}>
           <Container
             className={`${appStyles.Content} ${styles.Container} d-flex flex-column justify-content-center`}
           >
             <Form.Group className="text-center">
-
               {image ? (
                 <>
                   <figure>
@@ -96,7 +111,6 @@ function PostCreateForm() {
                   </div>
                 </>
               ) : (
-
                 <Form.Label
                   className="d-flex justify-content-center"
                   htmlFor="image-upload"
@@ -104,9 +118,10 @@ function PostCreateForm() {
                   <Asset src={Upload} message="Click or tap to upload an image" />
                 </Form.Label>
               )}
-
-              <Form.Control type="file" id="image-upload" accept="image/*" onChange={handleChangeImage} />
+              <Form.Control type="file" id="image-upload" accept="image/*" onChange={handleChangeImage} ref={imageInput} />
             </Form.Group>
+            {errors.image?.map((message, idx) =>
+              <Alert variant="warning" key={idx}>{message}</Alert>)}
             <div className="d-md-none">{textFields}</div>
           </Container>
         </Col>
