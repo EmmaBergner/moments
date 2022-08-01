@@ -1,11 +1,12 @@
 import React from 'react'
 import { Card, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
-import { axiosRes } from '../../api/axiosDefault';
 import Avatar from '../../components/Avatar';
+import { axiosRes } from '../../api/axiosDefault';
+import { MoreDropdown } from '../../components/MoreDropdown';
 import { useCurrentUser } from '../../contexts/CurrentUserContext';
 import styles from "../../styles/Post.module.css";
-import PostPage from './PostPage';
+import { useNavigate } from "react-router-dom";
 
 
 const Post = (props) => {
@@ -22,16 +23,29 @@ const Post = (props) => {
         image,
         updated_at,
         postPage,
-        setPost,
+        setPosts,
     } = props;
 
     const currentUser = useCurrentUser();
+
     const is_owner = currentUser?.username === owner
+
+    const navigate = useNavigate();
+
+    const handleEdit = () => {
+        navigate(`/posts/${id}/edit`)
+    }
+
+    const handleDelete = async () => {
+        try {
+            await axiosRes.delete(`/posts/${id}/`);
+            navigate(-1);
+        } catch (err) {console.log(err)}};
 
     const handleLike = async () => {
         try {
             const {data} = await axiosRes.post('/likes/', {post:id});
-            setPost((prevPosts) => ({
+            setPosts((prevPosts) => ({
                 ...prevPosts,
                 results: prevPosts.results.map((post) => {
                     return post.id === id
@@ -44,15 +58,14 @@ const Post = (props) => {
         }
     };
 
-
     const handleUnlike = async () => {
         try {
             await axiosRes.delete(`/likes/${like_id}/`);
-            setPost((prevPosts) => ({
+            setPosts((prevPosts) => ({
                 ...prevPosts,
                 results: prevPosts.results.map((post) => {
                     return post.id === id
-                    ? {...post, likes_count: post.likes_count + 1, like_id : null}
+                    ? {...post, likes_count: post.likes_count - 1, like_id : null}
                     : post;
                 }),
             }));
@@ -72,7 +85,7 @@ const Post = (props) => {
 
                     <div className="d-flex align-items-center">
                         <span>{updated_at}</span>
-                        {is_owner && postPage && "..."}
+                        {is_owner && postPage && (<MoreDropdown handleEdit={handleEdit} handleDelete={handleDelete}/> )}
                     </div>
                 </div>
             </Card.Body>
@@ -88,8 +101,9 @@ const Post = (props) => {
                         <OverlayTrigger placement='top' overlay={<Tooltip>You can't like your own post!</Tooltip>}>
                             <i className='far fa-heart' />
                         </OverlayTrigger>
+
                     ) : like_id ? (
-                        <span onClick={() => { }}>
+                        <span onClick={handleUnlike}>
                             <i className= {`fas fa-heart ${styles.Heart}`}/>
                         </span>
                     ) : currentUser ? (

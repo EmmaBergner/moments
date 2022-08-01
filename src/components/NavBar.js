@@ -71,11 +71,13 @@ const NavBar = () => {
     </>
 
   return (
-    <Navbar className={styles.NavBar} expand="md" fixed='top'>
+    <Navbar expanded={expanded} className={styles.NavBar} expand="md" fixed='top'>
       <Container>
-        <NavLink to="/"><Navbar.Brand>
-          <img src={logo} alt="logo" height="45" />
-        </Navbar.Brand></NavLink>
+        <NavLink to="/">
+          <Navbar.Brand>
+            <img src={logo} alt="logo" height="45" />
+          </Navbar.Brand>
+        </NavLink>
         {currentUser && addPostIcon}
 
         <Navbar.Toggle ref={ref}

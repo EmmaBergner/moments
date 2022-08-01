@@ -1,16 +1,13 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Form, Button, Image, Col, Row, Container, Alert } from "react-bootstrap";
-import Upload from "../../assets/upload.png";
 import styles from "../../styles/PostCreateEditForm.module.css";
 import appStyles from "../../App.module.css";
 import btnStyles from "../../styles/Button.module.css";
-import Asset from "../../components/Asset";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import { useParams } from "react-router-dom";
 import { axiosReq } from "../../api/axiosDefault";
 
-function PostCreateForm() {
-
+function PostEditForm() {
   const [errors, setErrors] = useState({});
 
   const [postData, setPostData] = useState({ title: "", content: "", image: "" });
@@ -18,8 +15,24 @@ function PostCreateForm() {
   const { title, content, image } = postData;
 
   const imageInput = useRef(null);
-
   const navigate = useNavigate();
+  const { id } = useParams();
+
+
+  useEffect(() => {
+    const handleMount = async () => {
+      try {
+        const { data } = await axiosReq.get(`/posts/${id}`)
+        const { title, content, image, is_owner } = data;
+        is_owner ? setPostData({ title, content, image }) : navigate("/");
+      } catch (err) {
+        console.log(err);
+      }
+    };
+    handleMount();
+  }, [navigate, id]);
+
+
 
   const handleChange = (event) => {
     setPostData({
@@ -40,17 +53,24 @@ function PostCreateForm() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    try {
-      const formData = new FormData();
-      formData.append("title", title);
-      formData.append("content", content);
+
+    const formData = new FormData();
+    formData.append("title", title);
+    formData.append("content", content);
+    if (imageInput?.current?.files[0]) {
       formData.append("image", imageInput.current.files[0]);
-      await axiosReq.post('/posts/', formData);
-      navigate(-1)
-    } catch (err) {
-      setErrors(err.response?.data)
     }
-  }
+
+    try {
+      await axiosReq.put(`/posts/${id}/`, formData);
+      navigate(`/posts/${id}`);
+    } catch (err) {
+      console.log(err);
+      if (err.response?.status !== 401) {
+        setErrors(err.response?.data)
+      }
+    }
+  };
 
   const textFields = (
     <div className="text-center">
@@ -87,7 +107,7 @@ function PostCreateForm() {
         Cancel
       </Button>
       <Button className={`${btnStyles.Button} ${btnStyles.Blue}`} type="submit">
-        Create
+        Save
       </Button>
     </div>
   );
@@ -97,28 +117,16 @@ function PostCreateForm() {
       <Row>
         <Col className="py-2 p-0 p-md-2" md={7} lg={8}>
           <Container
-            className={`${appStyles.Content} ${styles.Container} d-flex flex-column justify-content-center`}
-          >
+            className={`${appStyles.Content} ${styles.Container} d-flex flex-column justify-content-center`} >
             <Form.Group className="text-center">
-              {image ? (
-                <>
-                  <figure>
-                    <Image className={appStyles.Image} src={image} rounded />
-                  </figure>
-                  <div>
-                    <Form.Label className={`${btnStyles.Button} ${btnStyles.Blue} btn`} htmlFor="image-upload" >
-                      Change the image
-                    </Form.Label>
-                  </div>
-                </>
-              ) : (
-                <Form.Label
-                  className="d-flex justify-content-center"
-                  htmlFor="image-upload"
-                >
-                  <Asset src={Upload} message="Click or tap to upload an image" />
+              <figure>
+                <Image className={appStyles.Image} src={image} rounded />
+              </figure>
+              <div>
+                <Form.Label className={`${btnStyles.Button} ${btnStyles.Blue} btn`} htmlFor="image-upload" >
+                  Change the image
                 </Form.Label>
-              )}
+              </div>
               <Form.Control type="file" id="image-upload" accept="image/*" onChange={handleChangeImage} ref={imageInput} />
             </Form.Group>
             {errors.image?.map((message, idx) =>
@@ -134,4 +142,4 @@ function PostCreateForm() {
   );
 }
 
-export default PostCreateForm;
+export default PostEditForm;

@@ -14,7 +14,7 @@ export const CurrentUserProvider = ({ children }) => {
 
     const handleMount = async () => {
         try {
-            let user = await axios.get('dj-rest-auth/user/')
+            let user = await axiosRes.get('dj-rest-auth/user/')
             if (user) {
                 const { data } = user
                 setCurrentUser(data)
@@ -33,49 +33,11 @@ export const CurrentUserProvider = ({ children }) => {
 
     const navigate = useNavigate();
 
-
-    // axiosReq.interceptors.request.use(
-    //         async (config) => {
-    //             console.log("req0")
-    //             try {
-    //                 console.log("req1")
-    //                 await axios.post("/dj-rest-auth/token/refresh/");
-    //                 console.log("req2")
-    //             } catch (err) {
-    //                 console.log("req3")
-    //                 setCurrentUser((prevCurrentUser) => {
-    //                     if (prevCurrentUser) {
-    //                         console.log("req4")
-    //                         navigate("/signin");
-    //                     }
-    //                     console.log("req5")
-    //                     return null;
-    //                 });
-    //                 return config;
-    //             }
-    //             return config;
-    //         },
-    //         (err) => {
-    //             console.log("req6")
-    //             return Promise.reject(err);
-    //         }
-    //     );
-
-    //     axios.interceptors.response.use(
-    //         (response) => response,
-    //         async (err) => {
-    //             console.log("res")}
-    //     );
-
-
-
     useMemo(() => {
         axiosReq.interceptors.request.use(
             async (config) => {
-                console.log("req0");
-                try {console.log("req1")
+                try {
                     await axios.post("/dj-rest-auth/token/refresh/");
-                    console.log("req2")
                 } catch (err) {
                     setCurrentUser((prevCurrentUser) => {
                         if (prevCurrentUser) {
